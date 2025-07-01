@@ -1,3 +1,4 @@
+<<<<<<< HEAD
 # atNorth Visits Calendar
 
 A Jira Cloud Forge application that provides a comprehensive calendar view for managing client visits and site appointments.
@@ -268,3 +269,34 @@ For technical support or questions:
 **Version**: 6.53.0  
 **Last Updated**: December 2024  
 **Developed by**: XALT for atNorth 
+=======
+# README #
+
+This README would normally document whatever steps are necessary to get your application up and running.
+
+### What is this repository for? ###
+
+* Quick summary
+* Version
+* [Learn Markdown](https://bitbucket.org/tutorials/markdowndemo)
+
+### How do I get set up? ###
+
+* Summary of set up
+* Configuration
+* Dependencies
+* Database configuration
+* How to run tests
+* Deployment instructions
+
+### Contribution guidelines ###
+
+* Writing tests
+* Code review
+* Other guidelines
+
+### Who do I talk to? ###
+
+* Repo owner or admin
+* Other community or team contact
+>>>>>>> 875dd49ed3928b0d44776ff83275813b3be41b35
