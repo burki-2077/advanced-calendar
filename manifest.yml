@@ -1,0 +1,45 @@
+modules:
+  jira:globalPage:
+    - key: visits-calendar-page
+      resource: main
+      resolver:
+        function: resolver
+      title: Visits Calendar
+      icon: https://www.xalt.de/wp-content/uploads/2020/08/xalt_logo_black_main.svg
+      useAsConfig: false
+      viewportSize: medium
+      authorizationMode: none
+  function:
+    - key: resolver
+      handler: index.handler
+resources:
+  - key: main
+    path: static/build
+permissions:
+  scopes:
+    - read:jira-work
+    - write:jira-work
+    - read:jira-user
+    - storage:app
+    - read:field:jira
+    - read:field.option:jira
+  external:
+    fetch:
+      backend:
+        - api.atlassian.com
+    scripts:
+      - 'https://cdn.jsdelivr.net'
+      - 'https://unpkg.com'
+    styles:
+      - 'https://cdn.jsdelivr.net'
+      - 'https://unpkg.com'
+  content:
+    styles:
+      - 'unsafe-inline'
+    scripts:
+      - 'unsafe-inline'
+      - 'unsafe-eval'
+app:
+  id: ari:cloud:ecosystem::app/486e2a06-5415-4e2e-b3c9-2e7d3f86897f
+  runtime:
+    name: nodejs18.x

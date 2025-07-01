@@ -1,0 +1,22 @@
+{
+  "name": "visits-calendar",
+  "version": "1.0.0",
+  "main": "index.js",
+  "scripts": {
+    "build": "cd static && npm run build",
+    "deploy": "forge deploy",
+    "install:all": "npm install && cd static && npm install"
+  },
+  "keywords": [],
+  "author": "Atlassian Consultant",
+  "license": "MIT",
+  "description": "Calendar view for client visits based on Jira project",
+  "dependencies": {
+    "@forge/api": "^2.19.0",
+    "@forge/resolver": "^1.5.12"
+  },
+  "devDependencies": {
+    "@forge/cli": "^11.6.0",
+    "@forge/tunnel": "^5.10.3"
+  }
+}
