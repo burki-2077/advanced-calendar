@@ -347,10 +347,6 @@ function App() {
                     <span>Waiting for approval</span>
                   </div>
                   <div className="status-item">
-                    <span className="status-dot approved"></span>
-                    <span>Approved</span>
-                  </div>
-                  <div className="status-item">
                     <span className="status-dot rejected"></span>
                     <span>Rejected</span>
                   </div>
@@ -361,10 +357,6 @@ function App() {
                   <div className="status-item">
                     <span className="status-dot done"></span>
                     <span>Done</span>
-                  </div>
-                  <div className="status-item">
-                    <span className="status-dot reopened"></span>
-                    <span>Reopened</span>
                   </div>
                 </div>
               </div>

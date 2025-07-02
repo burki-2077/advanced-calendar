@@ -78,7 +78,7 @@ atnorth-visits-calendar/
 ├── src/
 │   ├── index.js              # Main Forge resolver
 │   ├── components/
-│   │   └── VacationCalendar.js
+│   │   └── (visits calendar components)
 │   └── services/
 │       └── jiraService.js    # Jira API integration
 ├── static/

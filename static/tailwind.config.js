@@ -6,7 +6,7 @@ module.exports = {
   theme: {
     extend: {
       colors: {
-        'vacation': {
+        'visits': {
           'approved': '#22c55e',
           'pending': '#f59e0b', 
           'rejected': '#ef4444',
