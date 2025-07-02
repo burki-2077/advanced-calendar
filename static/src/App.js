@@ -17,7 +17,7 @@ function App() {
   const [loading, setLoading] = useState(true);
   const [events, setEvents] = useState([]);
   const [filteredEvents, setFilteredEvents] = useState([]);
-  const [viewMode, setViewMode] = useState('week');
+  const [viewMode, setViewMode] = useState('month');
   const [selectedDate, setSelectedDate] = useState(new Date());
   const [jiraBaseUrl, setJiraBaseUrl] = useState('');
   const [stats, setStats] = useState({
@@ -64,6 +64,7 @@ function App() {
               assignee: event.assignee || '',
               customerName: event.customerName || 'Unknown Customer',
               contactName: event.contactName || '',
+              visitType: event.visitType || '', // Add visit type mapping
               rawData: event // Store the raw data for the modal
             };
           }).filter(event => event.start); // Only include events with valid start dates
@@ -257,97 +258,138 @@ function App() {
   
   return (
     <div className="app-container">
-      <header className="header">
-        <h1>atNorth Site Visits Calendar</h1>
+      <header className="modern-header">
+        <div className="header-content">
+          <div className="header-left">
+            <div className="brand-section">
+              <h1 className="app-title">🏢 atNorth Site Visits Calendar</h1>
+              <p className="app-subtitle">Manage and track client visits across all facilities</p>
+            </div>
+          </div>
+          
+          <div className="header-controls">
+            <div className="view-switcher modern">
+              <button 
+                className={`view-button ${viewMode === 'week' ? 'active' : ''}`} 
+                onClick={() => handleViewChange('week')}
+              >
+                📅 Weekly
+              </button>
+              <button 
+                className={`view-button ${viewMode === 'month' ? 'active' : ''}`} 
+                onClick={() => handleViewChange('month')}
+              >
+                📊 Monthly
+              </button>
+            </div>
+            
+            <button className="refresh-button modern" onClick={handleRefresh}>
+              <span>🔄 Refresh</span>
+            </button>
+          </div>
+        </div>
       </header>
       
       <div className="main-content-full">
         <div className="calendar-section-full">
-          <div className="calendar-header">
-            <div className="view-info">
-              <div className="view-title-row">
-                <h2>{viewMode === 'week' ? 'Weekly' : 'Monthly'} View ({formatDateRange()})</h2>
-                
-                <div className="view-stats-inline">
-                  <div className="visits-stats">
-                    <div className="total-visits">
-                      <span className="stat-number">{stats.totalVisits}</span>
-                      <span className="stat-label">Total Visits</span>
-                    </div>
-                    
-                    <div className="busiest-day">
-                      <span className="stat-number">{stats.busiestDay.count > 0 ? stats.busiestDay.count : 0}</span>
-                      <span className="stat-label">{stats.busiestDay.day || ''}</span>
-                      <span className="stat-sublabel">Busiest Day</span>
-                    </div>
-                  </div>
-                </div>
+          <div className="calendar-header modern">
+            <div className="header-top-row">
+              <div className="view-info">
+                <h2 className="view-title">{viewMode === 'week' ? 'Weekly' : 'Monthly'} View</h2>
+                <p className="date-range">{formatDateRange()}</p>
               </div>
               
-              <div className="view-subtitle-row">
-                <p>Viewing upcoming visit schedule</p>
+              <div className="stats-and-controls">
+                <div className="visit-stats">
+                  <div className="stat-card total-visits">
+                    <span className="stat-number">{stats.totalVisits}</span>
+                    <span className="stat-label">Total Visits</span>
+                  </div>
+                  
+                  <div className="stat-card busiest-day">
+                    <span className="stat-number">{stats.busiestDay.count > 0 ? stats.busiestDay.count : '—'}</span>
+                    <span className="stat-label">{stats.busiestDay.day || 'Busiest Day'}</span>
+                  </div>
+                </div>
                 
-                <div className="status-indicators">
-                  <span className="status-label">Status</span>
-                  <div className="status-dots">
-                    <div className="status-item">
-                      <span className="status-dot done"></span>
-                      <span>Done</span>
-                    </div>
-                    <div className="status-item">
-                      <span className="status-dot in-progress"></span>
-                      <span>Work in progress</span>
-                    </div>
-                    <div className="status-item">
-                      <span className="status-dot waiting"></span>
-                      <span>Waiting for start</span>
-                    </div>
+                <div className="controls-group">
+                  <div className="navigation-controls">
+                    <button className="nav-btn prev" onClick={navigatePrev}>
+                      ← Prev
+                    </button>
+                    <button className="nav-btn next" onClick={navigateNext}>
+                      Next →
+                    </button>
+                  </div>
+                  
+                  <div className="filter-control">
+                    <select 
+                      value={selectedSite} 
+                      onChange={(e) => handleSiteFilterChange(e.target.value)}
+                      className="site-select modern"
+                    >
+                      <option value="">🏭 All Sites</option>
+                      {availableSites.map((site) => (
+                        <option key={site} value={site}>📍 {site}</option>
+                      ))}
+                    </select>
                   </div>
                 </div>
               </div>
             </div>
             
-            <div className="calendar-actions">
-              <div className="navigation-actions">
-                <button className="nav-button prev" onClick={navigatePrev}>
-                  ← Prev {viewMode === 'week' ? 'Week' : 'Month'}
-                </button>
-                <button className="nav-button next" onClick={navigateNext}>
-                  Next {viewMode === 'week' ? 'Week' : 'Month'} →
-                </button>
+            <div className="header-bottom-row">
+              <div className="status-legend">
+                <span className="legend-title">📋 Status Legend:</span>
+                <div className="status-items">
+                  <div className="status-item">
+                    <span className="status-dot waiting-approval"></span>
+                    <span>Waiting for approval</span>
+                  </div>
+                  <div className="status-item">
+                    <span className="status-dot approved"></span>
+                    <span>Approved</span>
+                  </div>
+                  <div className="status-item">
+                    <span className="status-dot rejected"></span>
+                    <span>Rejected</span>
+                  </div>
+                  <div className="status-item">
+                    <span className="status-dot in-progress"></span>
+                    <span>In progress</span>
+                  </div>
+                  <div className="status-item">
+                    <span className="status-dot done"></span>
+                    <span>Done</span>
+                  </div>
+                  <div className="status-item">
+                    <span className="status-dot reopened"></span>
+                    <span>Reopened</span>
+                  </div>
+                </div>
               </div>
               
-              <div className="view-switcher">
-                <button 
-                  className={`view-button ${viewMode === 'week' ? 'active' : ''}`} 
-                  onClick={() => handleViewChange('week')}
-                >
-                  Weekly
-                </button>
-                <button 
-                  className={`view-button ${viewMode === 'month' ? 'active' : ''}`} 
-                  onClick={() => handleViewChange('month')}
-                >
-                  Monthly
-                </button>
+              <div className="visit-type-legend">
+                <span className="legend-title">🏷️ Visit Types:</span>
+                <div className="type-items">
+                  <div className="type-item">
+                    <span className="visit-type-icon internal-atnorth">IA</span>
+                    <span>Internal atNorth</span>
+                  </div>
+                  <div className="type-item">
+                    <span className="visit-type-icon external-atnorth">EA</span>
+                    <span>External atNorth</span>
+                  </div>
+                  <div className="type-item">
+                    <span className="visit-type-icon internal-customer">IC</span>
+                    <span>Internal Customer</span>
+                  </div>
+                  <div className="type-item">
+                    <span className="visit-type-icon external-customer">EC</span>
+                    <span>External Customer</span>
+                  </div>
+                </div>
               </div>
-              
-              <div className="site-filter">
-                <select 
-                  value={selectedSite} 
-                  onChange={(e) => handleSiteFilterChange(e.target.value)}
-                  className="site-select"
-                >
-                  <option value="">All Sites</option>
-                  {availableSites.map((site) => (
-                    <option key={site} value={site}>{site}</option>
-                  ))}
-                </select>
-              </div>
-              
-              <button className="refresh-button" onClick={handleRefresh}>
-                <span>↻ Refresh</span>
-              </button>
             </div>
           </div>
           

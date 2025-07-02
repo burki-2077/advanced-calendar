@@ -69,14 +69,20 @@ const VisitDetailsModal = ({ event, onClose, getJiraIssueUrl }) => {
         </div>
         
         <div className="modal-footer">
-          <a 
-            href={getJiraIssueUrl(event.jiraKey)} 
-            target="_blank" 
-            rel="noopener noreferrer"
+          <button 
             className="view-in-jira-button"
+            onClick={() => {
+              const url = getJiraIssueUrl(event.jiraKey);
+              if (url && url !== '#') {
+                window.open(url, '_blank', 'noopener,noreferrer');
+              } else {
+                console.error('Invalid Jira URL:', url);
+              }
+            }}
+            disabled={!getJiraIssueUrl(event.jiraKey) || getJiraIssueUrl(event.jiraKey) === '#'}
           >
-            View in Jira
-          </a>
+            🔗 View in Jira
+          </button>
         </div>
       </div>
     </div>

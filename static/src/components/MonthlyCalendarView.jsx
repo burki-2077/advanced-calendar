@@ -7,11 +7,13 @@ const dayNames = ['Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat', 'Sun'];
 const getVisitTypeIcon = (visitType) => {
   if (!visitType) return null;
   
-  const type = visitType.toLowerCase();
+  // Convert to string and lowercase for comparison
+  const type = String(visitType).toLowerCase().trim();
   
-  if (type.includes('internal') && type.includes('atnorth')) {
+  // Handle various formats of the visit type field
+  if (type.includes('internal') && (type.includes('atnorth') || type.includes('at north'))) {
     return { icon: 'IA', class: 'internal-atnorth' };
-  } else if (type.includes('external') && type.includes('atnorth')) {
+  } else if (type.includes('external') && (type.includes('atnorth') || type.includes('at north'))) {
     return { icon: 'EA', class: 'external-atnorth' };
   } else if (type.includes('internal') && type.includes('customer')) {
     return { icon: 'IC', class: 'internal-customer' };
@@ -19,8 +21,20 @@ const getVisitTypeIcon = (visitType) => {
     return { icon: 'EC', class: 'external-customer' };
   }
   
-  // Default fallback
-  return { icon: 'V', class: 'internal-atnorth' };
+  // Check for exact matches (in case the field values are exact strings)
+  switch (type) {
+    case 'internal atnorth':
+      return { icon: 'IA', class: 'internal-atnorth' };
+    case 'external atnorth':
+      return { icon: 'EA', class: 'external-atnorth' };
+    case 'internal customer':
+      return { icon: 'IC', class: 'internal-customer' };
+    case 'external customer':
+      return { icon: 'EC', class: 'external-customer' };
+    default:
+      // Return a default icon for any non-empty visit type
+      return { icon: 'V', class: 'internal-atnorth' };
+  }
 };
 
 function MonthlyCalendarView({ events, selectedDate, onDateChange, getJiraIssueUrl, onEventClick }) {
@@ -46,16 +60,20 @@ function MonthlyCalendarView({ events, selectedDate, onDateChange, getJiraIssueU
   const getStatusClass = (status) => {
     const lowerStatus = (status || '').toLowerCase();
     
-    if (lowerStatus.includes('done')) {
-      return 'status-done'; // Green
-    } else if (lowerStatus.includes('progress')) {
-      return 'status-in-progress'; // Yellow
-    } else if (lowerStatus.includes('waiting') || lowerStatus.includes('pending')) {
-      return 'status-waiting'; // Red
-    } else if (lowerStatus.includes('cancel')) {
-      return 'status-cancelled'; // Gray
+    if (lowerStatus.includes('waiting for approval')) {
+      return 'status-waiting-approval'; // Orange
+    } else if (lowerStatus.includes('approved')) {
+      return 'status-approved'; // Green
+    } else if (lowerStatus.includes('rejected')) {
+      return 'status-rejected'; // Red
+    } else if (lowerStatus.includes('in progress') || lowerStatus.includes('progress')) {
+      return 'status-in-progress'; // Blue
+    } else if (lowerStatus.includes('done')) {
+      return 'status-done'; // Dark Green
+    } else if (lowerStatus.includes('reopened')) {
+      return 'status-reopened'; // Purple
     } else {
-      return 'status-default';
+      return 'status-default'; // Gray
     }
   };
   
