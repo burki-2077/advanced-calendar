@@ -1,10 +1,6 @@
 import React from 'react';
 import './../../src/index.css';
 
-// Days of the week (Monday to Friday for business week)
-const DAYS_OF_WEEK = ['Monday', 'Tuesday', 'Wednesday', 'Thursday', 'Friday'];
-const DAYS_OF_WEEK_SHORT = ['Mon', 'Tue', 'Wed', 'Thu', 'Fri'];
-
 // Function to get visit type icon and class
 const getVisitTypeIcon = (visitType) => {
   if (!visitType) return null;
@@ -266,6 +262,17 @@ const WeeklyCalendarView = ({ events, selectedDate, onDateChange, getJiraIssueUr
     // Format customer name with date range and site
     const dateRangeText = formatDateRange(event.startDate, event.endDate);
     const siteText = event.site || '';
+    const contactName = event.contactName || '';
+    const customerName = event.customerName || '';
+    
+    // Build display text: contact name, customer name, date range, site
+    let displayText = '';
+    if (contactName) displayText += contactName;
+    if (customerName) displayText += (displayText ? ' • ' : '') + customerName;
+    if (dateRangeText) displayText += (displayText ? ' • ' : '') + dateRangeText;
+    if (siteText) displayText += (displayText ? ' • ' : '') + siteText;
+    
+    if (!displayText) displayText = 'Unknown Visit';
     
     return (
       <div 
@@ -287,9 +294,7 @@ const WeeklyCalendarView = ({ events, selectedDate, onDateChange, getJiraIssueUr
           </span>
         )}
         <div className="visit-title">
-          {event.customerName || 'Unknown Customer'}
-          {dateRangeText && <span className="visit-info-inline">&nbsp;•&nbsp;{dateRangeText}</span>}
-          {siteText && <span className="visit-info-inline">&nbsp;•&nbsp;{siteText}</span>}
+          {displayText}
         </div>
       </div>
     );
@@ -365,7 +370,9 @@ const WeeklyCalendarView = ({ events, selectedDate, onDateChange, getJiraIssueUr
                             {getVisitTypeIcon(event.visitType).icon}
                           </span>
                         )}
-                        <div className="visit-title">{event.customerName || 'Unknown Customer'}</div>
+                        <div className="visit-title">
+                          {event.contactName ? event.contactName + (event.customerName ? ' • ' + event.customerName : '') : (event.customerName || 'Unknown Customer')}
+                        </div>
                         <div className="visit-time">
                           {formatDateShort(event.startDate)}{event.site ? `\u00A0•\u00A0${event.site}` : ''}
                         </div>

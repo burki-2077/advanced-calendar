@@ -29,13 +29,13 @@ const VisitDetailsModal = ({ event, onClose, getJiraIssueUrl }) => {
         
         <div className="modal-body">
           <div className="detail-row">
-            <span className="detail-label">Customer Name:</span>
-            <span className="detail-value">{rawData.customerName || 'Not specified'}</span>
+            <span className="detail-label">Contact Name:</span>
+            <span className="detail-value">{rawData.contactName || 'Not specified'}</span>
           </div>
           
           <div className="detail-row">
-            <span className="detail-label">Contact Name:</span>
-            <span className="detail-value">{rawData.contactName || 'Not specified'}</span>
+            <span className="detail-label">Customer Name:</span>
+            <span className="detail-value">{rawData.customerName || 'Not specified'}</span>
           </div>
           
           <div className="detail-row">

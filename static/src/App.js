@@ -1,17 +1,8 @@
-import React, { useState, useEffect } from 'react';
-import { view, invoke } from '@forge/bridge';
+import React, { useState, useEffect, useCallback } from 'react';
+import { invoke } from '@forge/bridge';
 import MonthlyCalendarView from './components/MonthlyCalendarView';
 import WeeklyCalendarView from './components/WeeklyCalendarView';
 import VisitDetailsModal from './components/VisitDetailsModal';
-
-// Status to color mapping
-const STATUS_COLORS = {
-  'done': '#36B37E', // Green
-  'pending': '#FFAB00', // Yellow/Orange
-  'work in progress': '#FFAB00', // Yellow/Orange  
-  'waiting for start': '#FFAB00', // Yellow/Orange
-  'cancelled': '#FF5630', // Red
-};
 
 function App() {
   const [loading, setLoading] = useState(true);
@@ -92,27 +83,54 @@ function App() {
     fetchData();
   }, []);
   
-  // Filter events based on selected site and update statistics
-  useEffect(() => {
-    // Apply site filter
-    const filtered = selectedSite 
-      ? events.filter(event => event.site === selectedSite)
-      : events;
+  // Get events that fall within the current view (week or month)
+  const getEventsInCurrentView = useCallback((events) => {
+    if (!events.length) return [];
     
-    setFilteredEvents(filtered);
+    const startDate = new Date(selectedDate);
+    const endDate = new Date(selectedDate);
     
-    // Calculate statistics for the current view
-    calculateStats(filtered);
-  }, [selectedSite, events, selectedDate, viewMode]);
+    if (viewMode === 'week') {
+      // For weekly view: Monday to Friday of the selected week
+      const dayOfWeek = selectedDate.getDay();
+      const diff = selectedDate.getDate() - dayOfWeek + (dayOfWeek === 0 ? -6 : 1); // Adjust for Sunday
+      startDate.setDate(diff);
+      endDate.setDate(startDate.getDate() + 4); // Monday to Friday (5 days)
+    } else {
+      // For monthly view: Full month
+      startDate.setDate(1);
+      endDate.setMonth(startDate.getMonth() + 1);
+      endDate.setDate(0); // Last day of the month
+    }
+    
+    // Set times to encompass full days
+    startDate.setHours(0, 0, 0, 0);
+    endDate.setHours(23, 59, 59, 999);
+    
+    // Filter events that have ANY overlap with the view period
+    return events.filter(event => {
+      if (!event.start) return false;
+      
+      const eventStart = new Date(event.start);
+      const eventEnd = new Date(event.end || event.start);
+      
+      // Check if there's any overlap between event period and view period
+      // Event overlaps if: event starts before view ends AND event ends after view starts
+      const hasOverlap = eventStart <= endDate && eventEnd >= startDate;
+      
+      return hasOverlap;
+    });
+  }, [viewMode, selectedDate]);
   
   // Calculate statistics for the current view
-  const calculateStats = (filteredEvents) => {
+  const calculateStats = useCallback((filteredEvents) => {
     // Get events for the current view (week or month)
     const currentViewEvents = getEventsInCurrentView(filteredEvents);
     
     // Calculate total visits in the current view
     const totalVisits = currentViewEvents.length;
     console.log(`Calculating stats: ${totalVisits} visits in current view`);
+    console.log('Events being counted:', currentViewEvents.map(e => ({ key: e.jiraKey, start: e.start, site: e.site })));
     
     // Calculate busiest day in the current view
     const dayCount = {};
@@ -134,40 +152,20 @@ function App() {
       totalVisits,
       busiestDay
     });
-  };
+  }, [getEventsInCurrentView]);
   
-  // Get events that fall within the current view (week or month)
-  const getEventsInCurrentView = (events) => {
-    if (!events.length) return [];
+  // Filter events based on selected site and update statistics
+  useEffect(() => {
+    // Apply site filter
+    const filtered = selectedSite 
+      ? events.filter(event => event.site === selectedSite)
+      : events;
     
-    const startDate = new Date(selectedDate);
-    const endDate = new Date(selectedDate);
+    setFilteredEvents(filtered);
     
-    if (viewMode === 'week') {
-      // For weekly view: Monday to Friday of the selected week
-      const dayOfWeek = selectedDate.getDay();
-      const diff = selectedDate.getDate() - dayOfWeek + (dayOfWeek === 0 ? -6 : 1); // Adjust for Sunday
-      startDate.setDate(diff);
-      endDate.setDate(startDate.getDate() + 4); // Monday to Friday (5 days)
-    } else {
-      // For monthly view: Full month
-      startDate.setDate(1);
-      endDate.setMonth(startDate.getMonth() + 1);
-      endDate.setDate(0); // Last day of the month
-    }
-    
-    // Set times to start and end of day
-    startDate.setHours(0, 0, 0, 0);
-    endDate.setHours(23, 59, 59, 999);
-    
-    // Filter events that fall within the date range
-    return events.filter(event => {
-      if (!event.start) return false;
-      
-      const eventDate = new Date(event.start);
-      return eventDate >= startDate && eventDate <= endDate;
-    });
-  };
+    // Calculate statistics for the current view
+    calculateStats(filtered);
+  }, [selectedSite, events, selectedDate, viewMode, calculateStats]);
   
   // Handle view mode change
   const handleViewChange = (mode) => {

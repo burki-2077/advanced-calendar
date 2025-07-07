@@ -254,25 +254,42 @@ function MonthlyCalendarView({ events, selectedDate, onDateChange, getJiraIssueU
     return `${date.getFullYear()}-${date.getMonth()}-${date.getDate()}`;
   };
   
-  // Get events for a specific day
-  const getEventsForDay = (date) => {
-    const dateKey = getDateKey(date);
-    
-    // Get events from calendar data
-    if (!calendarData.eventMetadata) {
-      return [];
-    }
-    
-    // Find all events that include this day
-    const events = Object.values(calendarData.eventMetadata).filter(event => {
-      if (!event.daySpan) return false;
-      return event.daySpan.includes(dateKey);
-    });
-    
-    return events;
+  // Format date as day.month
+  const formatDateShort = (date) => {
+    if (!date) return '';
+    const day = date.getDate().toString().padStart(2, '0');
+    const month = (date.getMonth() + 1).toString().padStart(2, '0');
+    return `${day}.${month}`;
   };
   
+  // Format date range for display (e.g., "31.05-05.06")
+  const formatDateRange = (startDate, endDate) => {
+    if (!startDate || !endDate) return '';
+    return `${formatDateShort(startDate)}-${formatDateShort(endDate)}`;
+  };
 
+  // Build display text for events
+  const buildEventDisplayText = (event, isMultiDay = false) => {
+    const contactName = event.contactName || '';
+    const customerName = event.customerName || '';
+    const siteText = event.site || '';
+    
+    let displayText = '';
+    if (contactName) displayText += contactName;
+    if (customerName) displayText += (displayText ? ' • ' : '') + customerName;
+    
+    // For multi-day events, include date range
+    if (isMultiDay) {
+      const dateRangeText = formatDateRange(event.startDate, event.endDate);
+      if (dateRangeText) displayText += (displayText ? ' • ' : '') + dateRangeText;
+    }
+    
+    if (siteText) displayText += (displayText ? ' • ' : '') + siteText;
+    
+    if (!displayText) displayText = 'Unknown Visit';
+    
+    return displayText;
+  };
   
   // Render calendar
   return (
@@ -356,7 +373,7 @@ function MonthlyCalendarView({ events, selectedDate, onDateChange, getJiraIssueU
                               </span>
                             )}
                             <div className="visit-title">
-                              {event.customerName || 'Unknown Customer'}
+                              {buildEventDisplayText(event, false)}
                             </div>
                           </div>
                         ))}
@@ -420,7 +437,7 @@ function MonthlyCalendarView({ events, selectedDate, onDateChange, getJiraIssueU
                           </span>
                         )}
                         <div className="visit-title">
-                          {event.customerName || 'Unknown Customer'}
+                          {buildEventDisplayText(event, true)}
                         </div>
                       </div>
                     );
