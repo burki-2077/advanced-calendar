@@ -34,7 +34,6 @@ function App() {
         
         // Get visit data
         const visitEvents = await invoke('getVisitRequests');
-        console.log('Fetched visits:', visitEvents);
         
         if (Array.isArray(visitEvents)) {
           // Transform for calendar view
@@ -56,6 +55,8 @@ function App() {
               customerName: event.customerName || 'Unknown Customer',
               contactName: event.contactName || '',
               visitType: event.visitType || '', // Add visit type mapping
+              visitorList: event.visitorList || '', // NEW: Visitor List
+              visitReason: event.visitReason || '', // NEW: Visit Reason
               rawData: event // Store the raw data for the modal
             };
           }).filter(event => event.start); // Only include events with valid start dates
@@ -129,8 +130,6 @@ function App() {
     
     // Calculate total visits in the current view
     const totalVisits = currentViewEvents.length;
-    console.log(`Calculating stats: ${totalVisits} visits in current view`);
-    console.log('Events being counted:', currentViewEvents.map(e => ({ key: e.jiraKey, start: e.start, site: e.site })));
     
     // Calculate busiest day in the current view
     const dayCount = {};
@@ -190,7 +189,6 @@ function App() {
   
   // Handle event click to show details modal
   const handleEventClick = (event) => {
-    console.log('Event clicked:', event);
     setSelectedEvent(event);
     setShowDetailsModal(true);
   };

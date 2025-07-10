@@ -43,9 +43,6 @@ function MonthlyCalendarView({ events, selectedDate, onDateChange, getJiraIssueU
     weeks: []
   });
   
-  // Add console log to check incoming events
-  console.log("MonthlyCalendarView events:", events);
-  
   // Get days in a month
   const getDaysInMonth = (year, month) => {
     return new Date(year, month + 1, 0).getDate();
@@ -134,10 +131,14 @@ function MonthlyCalendarView({ events, selectedDate, onDateChange, getJiraIssueU
     return { calendarDates, weeks };
   }, [selectedDate]);
   
-    // Process events when they change
+  // Helper to get date key - CRITICAL: Must match daySpan format
+  const getDateKey = (date) => {
+    return `${date.getFullYear()}-${date.getMonth()}-${date.getDate()}`;
+  };
+
+  // Process events when they change
   useEffect(() => {
     if (!events || !Array.isArray(events) || events.length === 0) {
-      console.log("No events to process in MonthlyCalendarView");
       setCalendarData({
         weeks: calendarGrid.weeks,
         eventMetadata: {},
@@ -145,8 +146,6 @@ function MonthlyCalendarView({ events, selectedDate, onDateChange, getJiraIssueU
       });
       return;
     }
-
-    console.log("Processing", events.length, "events for monthly calendar");
     
     // Create event metadata and day mapping
     const eventMetadata = {};
@@ -175,9 +174,10 @@ function MonthlyCalendarView({ events, selectedDate, onDateChange, getJiraIssueU
         rowIndex: null
       };
       
-      // Calculate day span and add to day map
+      // CRITICAL FIX: Calculate day span with CORRECT date format matching getDateKey
       let currentDate = new Date(startDate);
       while (currentDate <= endDate) {
+        // Use EXACT same format as getDateKey function
         const dateKey = `${currentDate.getFullYear()}-${currentDate.getMonth()}-${currentDate.getDate()}`;
         eventMetadata[event.id].daySpan.push(dateKey);
         
@@ -247,11 +247,6 @@ function MonthlyCalendarView({ events, selectedDate, onDateChange, getJiraIssueU
       date.getMonth() === today.getMonth() &&
       date.getFullYear() === today.getFullYear()
     );
-  };
-  
-  // Helper to get date key
-  const getDateKey = (date) => {
-    return `${date.getFullYear()}-${date.getMonth()}-${date.getDate()}`;
   };
   
   // Format date as day.month
@@ -382,67 +377,89 @@ function MonthlyCalendarView({ events, selectedDate, onDateChange, getJiraIssueU
                   );
                 })}
 
-                {/* Render continuous multi-day events as overlays */}
-                {week.map((dayObj, dayIndex) => {
-                  const { date } = dayObj;
-                  const dateKey = getDateKey(date);
-                  const dayEventIds = calendarData.dayMap[dateKey] || [];
+                {/* Render continuous multi-day events as overlays - FIXED APPROACH */}
+                {(() => {
+                  // Collect all multi-day events that should be rendered in this week
+                  const weekMultiDayEvents = [];
                   
-                  // Find multi-day events starting on this day
-                  const multiDayEventsStartingHere = dayEventIds
-                    .map(id => calendarData.eventMetadata[id])
-                    .filter(event => 
-                      event && 
-                      event.isMultiDay && 
-                      getDateKey(event.startDate) === dateKey
-                    );
-
-                  return multiDayEventsStartingHere.map(event => {
-                    // Calculate how many days this event spans in current week
-                    let endDayIndex = dayIndex;
-                    for (let i = dayIndex + 1; i < 7; i++) {
-                      const nextDate = week[i].date;
-                      const nextDateKey = getDateKey(nextDate);
-                      if (event.daySpan.includes(nextDateKey)) {
-                        endDayIndex = i;
-                      } else {
-                        break;
+                  // Process each multi-day event only once per week
+                  const processedEventIds = new Set();
+                  
+                  week.forEach((dayObj, dayIndex) => {
+                    const { date } = dayObj;
+                    const dateKey = getDateKey(date);
+                    const dayEventIds = calendarData.dayMap[dateKey] || [];
+                    
+                    dayEventIds.forEach(eventId => {
+                      if (processedEventIds.has(eventId)) return;
+                      
+                      const event = calendarData.eventMetadata[eventId];
+                      if (!event || !event.isMultiDay) return;
+                      
+                      // Check if this event has any days in the current week
+                      const eventDaysInThisWeek = event.daySpan.filter(spanKey => {
+                        return week.some(weekDay => getDateKey(weekDay.date) === spanKey);
+                      });
+                      
+                      if (eventDaysInThisWeek.length > 0) {
+                        // Find the first and last day indices in this week
+                        let firstDayIndex = -1;
+                        let lastDayIndex = -1;
+                        
+                        week.forEach((weekDay, index) => {
+                          const weekDateKey = getDateKey(weekDay.date);
+                          if (event.daySpan.includes(weekDateKey)) {
+                            if (firstDayIndex === -1) firstDayIndex = index;
+                            lastDayIndex = index;
+                          }
+                        });
+                        
+                        if (firstDayIndex !== -1) {
+                          const spanWidth = lastDayIndex - firstDayIndex + 1;
+                          const widthPercent = (spanWidth / 7) * 100;
+                          
+                          weekMultiDayEvents.push({
+                            ...event,
+                            weekStartIndex: firstDayIndex,
+                            weekSpanWidth: spanWidth,
+                            widthPercent
+                          });
+                          
+                          processedEventIds.add(eventId);
+                        }
                       }
-                    }
-
-                    const spanDays = endDayIndex - dayIndex + 1;
-                    const leftPercent = (dayIndex / 7) * 100;
-                    const widthPercent = (spanDays / 7) * 100;
-
-                    return (
-                      <div 
-                        key={`multi-${event.id}-${weekIndex}`}
-                        className={`visit-card multi-day-event ${getStatusClass(event.status)}`}
-                        style={{
-                          position: 'absolute',
-                          top: `${40 + (event.rowIndex * 35)}px`,
-                          left: `calc(${leftPercent}% + 2px)`,
-                          width: `calc(${widthPercent}% - 4px)`,
-                          height: '30px',
-                          zIndex: 10
-                        }}
-                        onClick={(e) => {
-                          e.stopPropagation();
-                          onEventClick(event);
-                        }}
-                      >
-                        {getVisitTypeIcon(event.visitType) && (
-                          <span className={`visit-type-icon ${getVisitTypeIcon(event.visitType).class}`}>
-                            {getVisitTypeIcon(event.visitType).icon}
-                          </span>
-                        )}
-                        <div className="visit-title">
-                          {buildEventDisplayText(event, true)}
-                        </div>
-                      </div>
-                    );
+                    });
                   });
-                })}
+                  
+                  // Render all multi-day events for this week
+                  return weekMultiDayEvents.map(event => (
+                    <div 
+                      key={`multi-${event.id}-${weekIndex}`}
+                      className={`visit-card multi-day-event ${getStatusClass(event.status)}`}
+                      style={{
+                        position: 'absolute',
+                        top: `${40 + (event.rowIndex * 35)}px`,
+                        left: `calc(${event.weekStartIndex / 7 * 100}% + 2px)`,
+                        width: `calc(${event.widthPercent}% - 4px)`,
+                        height: '30px',
+                        zIndex: 10
+                      }}
+                      onClick={(e) => {
+                        e.stopPropagation();
+                        onEventClick(event);
+                      }}
+                    >
+                      {getVisitTypeIcon(event.visitType) && (
+                        <span className={`visit-type-icon ${getVisitTypeIcon(event.visitType).class}`}>
+                          {getVisitTypeIcon(event.visitType).icon}
+                        </span>
+                      )}
+                      <div className="visit-title">
+                        {buildEventDisplayText(event, true)}
+                      </div>
+                    </div>
+                  ));
+                })()}
               </div>
             );
           })}

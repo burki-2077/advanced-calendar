@@ -60,6 +60,16 @@ const VisitDetailsModal = ({ event, onClose, getJiraIssueUrl }) => {
             </span>
           </div>
           
+          <div className="detail-row">
+            <span className="detail-label">Visit - Visitor List:</span>
+            <span className="detail-value">{event.visitorList || rawData.visitorList || 'Not specified'}</span>
+          </div>
+          
+          <div className="detail-row">
+            <span className="detail-label">Visit - Reason:</span>
+            <span className="detail-value">{event.visitReason || rawData.visitReason || 'Not specified'}</span>
+          </div>
+
           {event.description && (
             <div className="detail-description">
               <span className="detail-label">Description:</span>
@@ -74,9 +84,18 @@ const VisitDetailsModal = ({ event, onClose, getJiraIssueUrl }) => {
             target="_blank" 
             rel="noopener noreferrer"
             className="view-in-jira-button"
+            onClick={(e) => {
+              e.stopPropagation();
+              // Ensure the link opens properly
+              const url = getJiraIssueUrl(event.jiraKey);
+              if (url && url !== '#') {
+                window.open(url, '_blank', 'noopener,noreferrer');
+              }
+            }}
             style={{
               textDecoration: 'none',
-              display: getJiraIssueUrl(event.jiraKey) === '#' ? 'none' : 'inline-flex'
+              display: getJiraIssueUrl(event.jiraKey) === '#' ? 'none' : 'inline-flex',
+              cursor: 'pointer'
             }}
           >
             🔗 View in Jira
