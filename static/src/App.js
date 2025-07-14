@@ -361,20 +361,20 @@ function App() {
                 <span className="legend-title">🏷️ Visit Types:</span>
                 <div className="type-items">
                   <div className="type-item">
-                    <span className="visit-type-icon internal-atnorth">IA</span>
-                    <span>Internal atNorth</span>
+                    <span className="visit-type-icon work-visit">WV</span>
+                    <span>Work Visit</span>
                   </div>
                   <div className="type-item">
-                    <span className="visit-type-icon external-atnorth">EA</span>
-                    <span>External atNorth</span>
+                    <span className="visit-type-icon escorted-access">EA</span>
+                    <span>Escorted Access</span>
                   </div>
                   <div className="type-item">
-                    <span className="visit-type-icon internal-customer">IC</span>
-                    <span>Internal Customer</span>
+                    <span className="visit-type-icon audit">AU</span>
+                    <span>Audit</span>
                   </div>
                   <div className="type-item">
-                    <span className="visit-type-icon external-customer">EC</span>
-                    <span>External Customer</span>
+                    <span className="visit-type-icon other">OT</span>
+                    <span>Other</span>
                   </div>
                 </div>
               </div>

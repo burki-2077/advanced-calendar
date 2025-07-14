@@ -8,7 +8,11 @@ modules:
       icon: https://www.xalt.de/wp-content/uploads/2020/08/xalt_logo_black_main.svg
       useAsConfig: false
       viewportSize: medium
-      authorizationMode: none
+      authorizationMode: requiresUser
+      conditions:
+        - condition: user_account_id
+          params:
+            accountId: "712020:f3c95ad3-71c6-4a73-9b53-1ab0cf0b9a6e"
   function:
     - key: resolver
       handler: index.handler
@@ -42,4 +46,4 @@ permissions:
 app:
   id: ari:cloud:ecosystem::app/486e2a06-5415-4e2e-b3c9-2e7d3f86897f
   runtime:
-    name: nodejs18.x
+    name: nodejs20.x

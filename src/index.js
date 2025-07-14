@@ -6,11 +6,9 @@ const resolver = new Resolver();
 // Function to fetch client visits
 async function fetchVisitRequests() {
   try {
-    console.log('Starting to fetch visits from SUPPORT project');
-    // Using project=SUPPORT and issue type=Visit
-    const jql = 'project = SUPPORT AND issuetype = Visit ORDER BY created DESC';
-  
-    console.log(`Executing JQL: ${jql}`);
+    // Use the correct JQL with request type filter and no result limit
+    const jql = 'project = SUPPORT AND "request type" = "Visit (SUPPORT)" ORDER BY created DESC';
+    
     const result = await api.asUser().requestJira(route`/rest/api/3/search`, {
       method: 'POST',
       headers: {
@@ -24,27 +22,26 @@ async function fetchVisitRequests() {
           'status',
           'created',
           'assignee',
+          'issuetype',
           'customfield_10119',  // Time of visit (Start time)
-          'customfield_10799',  // End time
+          'customfield_11004',  // End time
           'customfield_10066',  // Site
-          'customfield_10255',  // Customer Name
-          'customfield_10256',  // Contact Name
-          'customfield_10996'   // Type of visit
-        ],
-        maxResults: 100
+          'customfield_10255',  // Customer Company Name
+          'customfield_10110',  // Contact Name
+          'customfield_11007',  // Type of visit
+          'customfield_10335',  // Visitor List
+          'customfield_10613'   // Reason
+        ]
+        // Removed maxResults to allow counting all visits
       })
     });
 
-    console.log('API Response status:', result.status);
     const data = await result.json();
     
     // If no issues found, return empty array
-    if (!data.issues || data.issues.length === 0) {
-      console.log('No visit requests found in Jira');
+    if (!data || !data.issues || data.issues.length === 0) {
       return [];
     }
-    
-    console.log(`Found ${data.issues.length} visit requests, processing...`);
     
     // Helper function to safely get field values that might be null/undefined
     const getSafeFieldValue = (field) => {
@@ -62,14 +59,39 @@ async function fetchVisitRequests() {
     const formatDateTime = (dateTimeObj) => {
       if (!dateTimeObj) return null;
       
-      // Handle different datetime formats
+      // Handle different datetime formats from Jira
       if (typeof dateTimeObj === 'string') {
+        // Already a string, likely ISO format
         return dateTimeObj;
       }
       
-      // Atlassian datetime format has 'iso' property
-      if (dateTimeObj.iso) {
-        return dateTimeObj.iso;
+      if (typeof dateTimeObj === 'object') {
+        // Check for different Jira datetime object formats
+        if (dateTimeObj.iso) {
+          return dateTimeObj.iso;
+        }
+        
+        if (dateTimeObj.value) {
+          return dateTimeObj.value;
+        }
+        
+        if (dateTimeObj.displayValue) {
+          return dateTimeObj.displayValue;
+        }
+        
+        // Handle date object format with year, month, day, hour, minute
+        if (dateTimeObj.year && dateTimeObj.month && dateTimeObj.day) {
+          const year = dateTimeObj.year;
+          const month = String(dateTimeObj.month).padStart(2, '0');
+          const day = String(dateTimeObj.day).padStart(2, '0');
+          const hour = String(dateTimeObj.hour || 0).padStart(2, '0');
+          const minute = String(dateTimeObj.minute || 0).padStart(2, '0');
+          
+          return `${year}-${month}-${day}T${hour}:${minute}:00.000Z`;
+        }
+        
+        // Try to convert object to string
+        return dateTimeObj.toString();
       }
       
       return null;
@@ -84,13 +106,13 @@ async function fetchVisitRequests() {
       if (issue.fields.description) {
         if (typeof issue.fields.description === 'string') {
           description = issue.fields.description;
-        } else if (issue.fields.description.content) {
+        } else if (issue.fields.description.content && Array.isArray(issue.fields.description.content)) {
           // Process Atlassian Document Format
           description = issue.fields.description.content
             .map(block => {
-              if (block.type === 'paragraph') {
+              if (block && block.type === 'paragraph' && block.content && Array.isArray(block.content)) {
                 return block.content
-                  .map(text => text.text || '')
+                  .map(text => (text && text.text) ? text.text : '')
                   .join('');
               }
               return '';
@@ -106,7 +128,7 @@ async function fetchVisitRequests() {
         statusName = issue.fields.status.name;
       }
       
-      // Process times - handle various formats
+      // Process times - handle various formats and improve multi-day detection
       let startTime = null;
       let endTime = null;
       
@@ -114,24 +136,48 @@ async function fetchVisitRequests() {
         startTime = issue.fields.customfield_10119;
       }
       
-      if (issue.fields.customfield_10799) {
-        endTime = issue.fields.customfield_10799;
+      if (issue.fields.customfield_11004) {
+        endTime = issue.fields.customfield_11004;
       }
       
       let eventStartTime = formatDateTime(startTime);
       let eventEndTime = formatDateTime(endTime);
       
-      // If no times specified, use created date as fallback
+      // If no start time specified, use created date as fallback
       if (!eventStartTime) {
         eventStartTime = issue.fields.created;
       }
       
+      // Better end time handling for multi-day visits
       if (!eventEndTime && eventStartTime) {
-        // Default to 1 hour duration if only start time is available
         const startDate = new Date(eventStartTime);
-        const endDate = new Date(startDate);
-        endDate.setHours(endDate.getHours() + 1);
-        eventEndTime = endDate.toISOString();
+        
+        // Check if this looks like a multi-day visit based on naming patterns
+        const summaryLower = summary.toLowerCase();
+        const isLikelyMultiDay = 
+          summaryLower.includes('week') ||
+          summaryLower.includes('weeks') ||
+          summaryLower.includes('day') ||
+          summaryLower.includes('days') ||
+          summaryLower.includes('month') ||
+          summaryLower.includes('installation') ||
+          summaryLower.includes('project') ||
+          summaryLower.includes('migration') ||
+          summaryLower.includes('training') ||
+          summaryLower.includes('deployment') ||
+          summaryLower.includes('implementation');
+        
+        if (isLikelyMultiDay) {
+          // For likely multi-day visits, default to 3 days if no end time
+          const endDate = new Date(startDate);
+          endDate.setDate(endDate.getDate() + 2); // 3 days total
+          eventEndTime = endDate.toISOString();
+        } else {
+          // For regular visits, default to 1 hour duration
+          const endDate = new Date(startDate);
+          endDate.setHours(endDate.getHours() + 1);
+          eventEndTime = endDate.toISOString();
+        }
       }
       
       const event = {
@@ -145,11 +191,12 @@ async function fetchVisitRequests() {
         assignee: issue.fields.assignee?.displayName || '',
         site: getSafeFieldValue(issue.fields.customfield_10066), // Site
         customerName: getSafeFieldValue(issue.fields.customfield_10255), // Customer Name
-        contactName: getSafeFieldValue(issue.fields.customfield_10256), // Contact Name
-        visitType: getSafeFieldValue(issue.fields.customfield_10996) // Type of visit
+        contactName: getSafeFieldValue(issue.fields.customfield_10110), // Customer Contact
+        visitType: getSafeFieldValue(issue.fields.customfield_11007), // Type of visit
+        visitorList: getSafeFieldValue(issue.fields.customfield_10335), // Visit - Visitor List
+        visitReason: getSafeFieldValue(issue.fields.customfield_10613) // Visit - Reason
       };
       
-      console.log(`Processed visit: ${issue.key}, start: ${eventStartTime}, end: ${eventEndTime}`);
       return event;
     }).filter(event => event.startTime); // Filter out events with no valid start time
     
@@ -194,7 +241,6 @@ async function getJiraBaseUrl() {
 // Resolver function to get all visit requests
 resolver.define('getVisitRequests', async () => {
   try {
-    console.log('getVisitRequests resolver called');
     const visitRequests = await fetchVisitRequests();
     return visitRequests;
   } catch (error) {

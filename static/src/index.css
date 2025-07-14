@@ -758,20 +758,20 @@ code {
   text-shadow: 0 1px 1px rgba(0,0,0,0.3);
 }
 
-.visit-type-icon.internal-atnorth {
-  background-color: #0052cc; /* Blue for Internal atNorth */
+.visit-type-icon.work-visit {
+  background-color: #0052cc; /* Blue for Work Visit */
 }
 
-.visit-type-icon.external-atnorth {
-  background-color: #36b37e; /* Green for External atNorth */
+.visit-type-icon.escorted-access {
+  background-color: #36b37e; /* Green for Escorted Access */
 }
 
-.visit-type-icon.internal-customer {
-  background-color: #ff8b00; /* Orange for Internal Customer */
+.visit-type-icon.audit {
+  background-color: #ff8b00; /* Orange for Audit */
 }
 
-.visit-type-icon.external-customer {
-  background-color: #de350b; /* Red for External Customer */
+.visit-type-icon.other {
+  background-color: #de350b; /* Red for Other */
 }
 
 /* Visit card styling - ensuring consistency */

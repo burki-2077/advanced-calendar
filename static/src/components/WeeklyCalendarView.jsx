@@ -8,30 +8,30 @@ const getVisitTypeIcon = (visitType) => {
   // Convert to string and lowercase for comparison
   const type = String(visitType).toLowerCase().trim();
   
-  // Handle various formats of the visit type field
-  if (type.includes('internal') && (type.includes('atnorth') || type.includes('at north'))) {
-    return { icon: 'IA', class: 'internal-atnorth' };
-  } else if (type.includes('external') && (type.includes('atnorth') || type.includes('at north'))) {
-    return { icon: 'EA', class: 'external-atnorth' };
-  } else if (type.includes('internal') && type.includes('customer')) {
-    return { icon: 'IC', class: 'internal-customer' };
-  } else if (type.includes('external') && type.includes('customer')) {
-    return { icon: 'EC', class: 'external-customer' };
+  // Handle new visit types
+  if (type.includes('work visit') || type === 'work visit') {
+    return { icon: 'WV', class: 'work-visit' };
+  } else if (type.includes('escorted access') || type === 'escorted access') {
+    return { icon: 'EA', class: 'escorted-access' };
+  } else if (type.includes('audit') || type === 'audit') {
+    return { icon: 'AU', class: 'audit' };
+  } else if (type.includes('other') || type === 'other') {
+    return { icon: 'OT', class: 'other' };
   }
   
   // Check for exact matches (in case the field values are exact strings)
   switch (type) {
-    case 'internal atnorth':
-      return { icon: 'IA', class: 'internal-atnorth' };
-    case 'external atnorth':
-      return { icon: 'EA', class: 'external-atnorth' };
-    case 'internal customer':
-      return { icon: 'IC', class: 'internal-customer' };
-    case 'external customer':
-      return { icon: 'EC', class: 'external-customer' };
+    case 'work visit':
+      return { icon: 'WV', class: 'work-visit' };
+    case 'escorted access':
+      return { icon: 'EA', class: 'escorted-access' };
+    case 'audit':
+      return { icon: 'AU', class: 'audit' };
+    case 'other':
+      return { icon: 'OT', class: 'other' };
     default:
       // Return a default icon for any non-empty visit type
-      return { icon: 'V', class: 'internal-atnorth' };
+      return { icon: 'V', class: 'work-visit' };
   }
 };
 
