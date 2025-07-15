@@ -57,8 +57,8 @@ const getStatusClass = (status) => {
 };
 
 const WeeklyCalendarView = ({ events, selectedDate, onDateChange, getJiraIssueUrl, onEventClick }) => {
-  // Set up days and hours for the weekly view
-  const daysOfWeek = ['Monday', 'Tuesday', 'Wednesday', 'Thursday', 'Friday'];
+  // Set up days and hours for the weekly view - now including all 7 days
+  const daysOfWeek = ['Monday', 'Tuesday', 'Wednesday', 'Thursday', 'Friday', 'Saturday', 'Sunday'];
   const hours = ['8AM', '9AM', '10AM', '11AM', '12PM', '1PM', '2PM', '3PM', '4PM', '5PM', '6PM'];
   
   // Calculate the start of the week based on the selected date
