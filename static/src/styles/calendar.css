@@ -163,20 +163,21 @@
   text-shadow: 0 1px 1px rgba(0,0,0,0.3);
 }
 
-.visit-type-icon.work-visit {
-  background-color: #0052cc; /* Blue for Work Visit */
+/* Dynamic visit type color classes - defined in index.css */
+.visit-type-icon.visit-type-1 {
+  background-color: #0052cc; /* Blue */
 }
 
-.visit-type-icon.escorted-access {
-  background-color: #36b37e; /* Green for Escorted Access */
+.visit-type-icon.visit-type-2 {
+  background-color: #36b37e; /* Green */
 }
 
-.visit-type-icon.audit {
-  background-color: #ff8b00; /* Orange for Audit */
+.visit-type-icon.visit-type-3 {
+  background-color: #ff8b00; /* Orange */
 }
 
-.visit-type-icon.other {
-  background-color: #de350b; /* Red for Other */
+.visit-type-icon.visit-type-4 {
+  background-color: #de350b; /* Red */
 }
 
 /* Status colors */

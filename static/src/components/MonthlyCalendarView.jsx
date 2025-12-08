@@ -3,41 +3,50 @@ import React, { useEffect, useState, useMemo } from 'react';
 // Days of the week starting with Monday
 const dayNames = ['Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat', 'Sun'];
 
-// Function to get visit type icon and class
+// Stable color mapping for visit types
+const visitTypeColorMap = new Map();
+let colorCounter = 0;
+
+// Function to get visit type icon and class - dynamically generates initials
 const getVisitTypeIcon = (visitType) => {
   if (!visitType) return null;
   
-  // Convert to string and lowercase for comparison
-  const type = String(visitType).toLowerCase().trim();
+  const type = String(visitType).trim();
   
-  // Handle new visit types
-  if (type.includes('work visit') || type === 'work visit') {
-    return { icon: 'WV', class: 'work-visit' };
-  } else if (type.includes('escorted access') || type === 'escorted access') {
-    return { icon: 'EA', class: 'escorted-access' };
-  } else if (type.includes('audit') || type === 'audit') {
-    return { icon: 'AU', class: 'audit' };
-  } else if (type.includes('other') || type === 'other') {
-    return { icon: 'OT', class: 'other' };
+  // Generate initials from the visit type
+  // Take first letter of each word (up to 3 letters)
+  const words = type.split(/[\s-_]+/);
+  let initials = words
+    .map(word => word.charAt(0).toUpperCase())
+    .filter(char => char.match(/[A-Z0-9]/)) // Only letters and numbers
+    .slice(0, 3) // Max 3 characters
+    .join('');
+  
+  // Fallback to first 2 characters if no valid initials
+  if (!initials) {
+    initials = type.substring(0, 2).toUpperCase();
   }
   
-  // Check for exact matches (in case the field values are exact strings)
-  switch (type) {
-    case 'work visit':
-      return { icon: 'WV', class: 'work-visit' };
-    case 'escorted access':
-      return { icon: 'EA', class: 'escorted-access' };
-    case 'audit':
-      return { icon: 'AU', class: 'audit' };
-    case 'other':
-      return { icon: 'OT', class: 'other' };
-    default:
-      // Return a default icon for any non-empty visit type
-      return { icon: 'V', class: 'work-visit' };
+  // Assign color sequentially for each unique type
+  if (!visitTypeColorMap.has(type)) {
+    visitTypeColorMap.set(type, colorCounter % 12);
+    colorCounter++;
   }
+  
+  const colorIndex = visitTypeColorMap.get(type);
+  const colorClasses = [
+    'visit-type-1', 'visit-type-2', 'visit-type-3', 'visit-type-4',
+    'visit-type-5', 'visit-type-6', 'visit-type-7', 'visit-type-8',
+    'visit-type-9', 'visit-type-10', 'visit-type-11', 'visit-type-12'
+  ];
+  
+  return { 
+    icon: initials, 
+    class: colorClasses[colorIndex]
+  };
 };
 
-function MonthlyCalendarView({ events, selectedDate, onDateChange, getJiraIssueUrl, onEventClick }) {
+function MonthlyCalendarView({ events, selectedDate, onDateChange, getJiraIssueUrl, onEventClick, barFields = ['site', 'typeOfVisit'] }) {
   // State to store processed events
   const [calendarData, setCalendarData] = useState({
     weeks: []
@@ -54,23 +63,20 @@ function MonthlyCalendarView({ events, selectedDate, onDateChange, getJiraIssueU
   };
   
   // Get status class for styling
-  const getStatusClass = (status) => {
-    const lowerStatus = (status || '').toLowerCase();
+  const getStatusClass = (event) => {
+    const statusCategory = (event?.statusCategory || 'undefined').toLowerCase();
     
-    if (lowerStatus.includes('waiting for approval')) {
-      return 'status-waiting-approval'; // Orange
-    } else if (lowerStatus.includes('approved')) {
-      return 'status-approved'; // Green
-    } else if (lowerStatus.includes('rejected')) {
-      return 'status-rejected'; // Red
-    } else if (lowerStatus.includes('in progress') || lowerStatus.includes('progress')) {
-      return 'status-in-progress'; // Blue
-    } else if (lowerStatus.includes('done')) {
-      return 'status-done'; // Dark Green
-    } else if (lowerStatus.includes('reopened')) {
-      return 'status-reopened'; // Purple
-    } else {
-      return 'status-default'; // Gray
+    // Map status categories to CSS classes
+    switch (statusCategory) {
+      case 'new':
+        return 'status-new';
+      case 'indeterminate':
+        return 'status-indeterminate';
+      case 'done':
+        return 'status-done';
+      case 'undefined':
+      default:
+        return 'status-undefined';
     }
   };
   
@@ -249,39 +255,39 @@ function MonthlyCalendarView({ events, selectedDate, onDateChange, getJiraIssueU
     );
   };
   
-  // Format date as day.month
-  const formatDateShort = (date) => {
-    if (!date) return '';
-    const day = date.getDate().toString().padStart(2, '0');
-    const month = (date.getMonth() + 1).toString().padStart(2, '0');
-    return `${day}.${month}`;
-  };
-  
-  // Format date range for display (e.g., "31.05-05.06")
-  const formatDateRange = (startDate, endDate) => {
-    if (!startDate || !endDate) return '';
-    return `${formatDateShort(startDate)}-${formatDateShort(endDate)}`;
-  };
-
   // Build display text for events
   const buildEventDisplayText = (event, isMultiDay = false) => {
-    const contactName = event.contactName || '';
-    const customerName = event.customerName || '';
-    const siteText = event.site || '';
+    // Always start with visitor name (title)
+    let displayText = event.title || 'Untitled Visit';
     
-    let displayText = '';
-    if (contactName) displayText += contactName;
-    if (customerName) displayText += (displayText ? ' • ' : '') + customerName;
+    // Add date range in dd.mm-dd.mm format
+    const formatDateShort = (date) => {
+      if (!date) return '';
+      const d = new Date(date);
+      const day = d.getDate().toString().padStart(2, '0');
+      const month = (d.getMonth() + 1).toString().padStart(2, '0');
+      return `${day}.${month}`;
+    };
     
-    // For multi-day events, include date range
-    if (isMultiDay) {
-      const dateRangeText = formatDateRange(event.startDate, event.endDate);
-      if (dateRangeText) displayText += (displayText ? ' • ' : '') + dateRangeText;
-    }
+    const dateRangeText = `${formatDateShort(event.start)}-${formatDateShort(event.end)}`;
+    displayText += ' • ' + dateRangeText;
     
-    if (siteText) displayText += (displayText ? ' • ' : '') + siteText;
-    
-    if (!displayText) displayText = 'Unknown Visit';
+    // Add configured additional fields
+    barFields.forEach(fieldId => {
+      let fieldValue = '';
+      
+      if (fieldId === 'site') {
+        fieldValue = event.site;
+      } else if (fieldId === 'typeOfVisit') {
+        fieldValue = event.rawData?.visitType;
+      } else if (event.rawData?.customFields && event.rawData.customFields[fieldId]) {
+        fieldValue = event.rawData.customFields[fieldId].value;
+      }
+      
+      if (fieldValue) {
+        displayText += ' • ' + fieldValue;
+      }
+    });
     
     return displayText;
   };
@@ -348,7 +354,7 @@ function MonthlyCalendarView({ events, selectedDate, onDateChange, getJiraIssueU
                         {singleDayEvents.map((event) => (
                           <div 
                             key={`single-${event.id}`}
-                            className={`visit-card ${getStatusClass(event.status)}`}
+                            className={`visit-card ${getStatusClass(event)}`}
                             style={{
                               position: 'absolute',
                               top: `${40 + (event.rowIndex * 35)}px`,
@@ -362,13 +368,15 @@ function MonthlyCalendarView({ events, selectedDate, onDateChange, getJiraIssueU
                               onEventClick(event);
                             }}
                           >
-                            {getVisitTypeIcon(event.visitType) && (
-                              <span className={`visit-type-icon ${getVisitTypeIcon(event.visitType).class}`}>
-                                {getVisitTypeIcon(event.visitType).icon}
-                              </span>
-                            )}
-                            <div className="visit-title">
-                              {buildEventDisplayText(event, false)}
+                            <div style={{ display: 'flex', alignItems: 'center', width: '100%' }}>
+                              {getVisitTypeIcon(event.visitType) && (
+                                <span className={`visit-type-icon ${getVisitTypeIcon(event.visitType).class}`}>
+                                  {getVisitTypeIcon(event.visitType).icon}
+                                </span>
+                              )}
+                              <div className="visit-title">
+                                {buildEventDisplayText(event, false)}
+                              </div>
                             </div>
                           </div>
                         ))}
@@ -435,7 +443,7 @@ function MonthlyCalendarView({ events, selectedDate, onDateChange, getJiraIssueU
                   return weekMultiDayEvents.map(event => (
                     <div 
                       key={`multi-${event.id}-${weekIndex}`}
-                      className={`visit-card multi-day-event ${getStatusClass(event.status)}`}
+                      className={`visit-card multi-day-event ${getStatusClass(event)}`}
                       style={{
                         position: 'absolute',
                         top: `${40 + (event.rowIndex * 35)}px`,
@@ -449,13 +457,15 @@ function MonthlyCalendarView({ events, selectedDate, onDateChange, getJiraIssueU
                         onEventClick(event);
                       }}
                     >
-                      {getVisitTypeIcon(event.visitType) && (
-                        <span className={`visit-type-icon ${getVisitTypeIcon(event.visitType).class}`}>
-                          {getVisitTypeIcon(event.visitType).icon}
-                        </span>
-                      )}
-                      <div className="visit-title">
-                        {buildEventDisplayText(event, true)}
+                      <div style={{ display: 'flex', alignItems: 'center', width: '100%' }}>
+                        {getVisitTypeIcon(event.visitType) && (
+                          <span className={`visit-type-icon ${getVisitTypeIcon(event.visitType).class}`}>
+                            {getVisitTypeIcon(event.visitType).icon}
+                          </span>
+                        )}
+                        <div className="visit-title">
+                          {buildEventDisplayText(event, true)}
+                        </div>
                       </div>
                     </div>
                   ));

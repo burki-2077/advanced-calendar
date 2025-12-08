@@ -34,10 +34,9 @@ permissions:
     - read:servicedesk-request
   content:
     styles:
-      - 'unsafe-inline'
+      - 'self'
     scripts:
-      - 'unsafe-inline'
-      - 'unsafe-eval'
+      - 'self'
 app:
   id: ari:cloud:ecosystem::app/486e2a06-5415-4e2e-b3c9-2e7d3f86897f
   runtime:

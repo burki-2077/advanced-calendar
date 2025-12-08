@@ -28,18 +28,14 @@ const VisitDetailsModal = ({ event, onClose, getJiraIssueUrl }) => {
         </div>
         
         <div className="modal-body">
+          {/* Required Fields - Always Shown */}
           <div className="detail-row">
-            <span className="detail-label">Contact Name:</span>
-            <span className="detail-value">{rawData.contactName || 'Not specified'}</span>
+            <span className="detail-label">Visitor Name:</span>
+            <span className="detail-value">{rawData.visitorName || 'Not specified'}</span>
           </div>
           
           <div className="detail-row">
-            <span className="detail-label">Customer Name:</span>
-            <span className="detail-value">{rawData.customerName || 'Not specified'}</span>
-          </div>
-          
-          <div className="detail-row">
-            <span className="detail-label">Time of Visit:</span>
+            <span className="detail-label">Start Time:</span>
             <span className="detail-value">{formatDate(event.start)}</span>
           </div>
           
@@ -49,26 +45,33 @@ const VisitDetailsModal = ({ event, onClose, getJiraIssueUrl }) => {
           </div>
           
           <div className="detail-row">
-            <span className="detail-label">Site:</span>
+            <span className="detail-label">Location:</span>
             <span className="detail-value">{event.site || 'Not specified'}</span>
           </div>
           
           <div className="detail-row">
+            <span className="detail-label">Type of Visit:</span>
+            <span className="detail-value">{rawData.visitType || 'Not specified'}</span>
+          </div>
+          
+          <div className="detail-row">
             <span className="detail-label">Status:</span>
-            <span className={`detail-value status-badge status-${event.status?.toLowerCase().replace(/\s+/g, '-')}`}>
+            <span className={`detail-value status-badge status-${event.statusCategory || 'undefined'}`}>
               {event.status || 'Not specified'}
             </span>
           </div>
           
-          <div className="detail-row">
-            <span className="detail-label">Visit - Visitor List:</span>
-            <span className="detail-value">{event.visitorList || rawData.visitorList || 'Not specified'}</span>
-          </div>
-          
-          <div className="detail-row">
-            <span className="detail-label">Visit - Reason:</span>
-            <span className="detail-value">{event.visitReason || rawData.visitReason || 'Not specified'}</span>
-          </div>
+          {/* Dynamic Custom Fields */}
+          {rawData.customFields && Object.keys(rawData.customFields).length > 0 && (
+            <>
+              {Object.entries(rawData.customFields).map(([key, field]) => (
+                <div key={key} className="detail-row">
+                  <span className="detail-label">{field.label}:</span>
+                  <span className="detail-value">{field.value || 'Not specified'}</span>
+                </div>
+              ))}
+            </>
+          )}
 
           {event.description && (
             <div className="detail-description">

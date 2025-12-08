@@ -1,6 +1,6 @@
-# atNorth Visits Calendar
+# Advanced Calendar for Jira
 
-A Jira Cloud Forge application that provides a comprehensive calendar view for managing client visits and site appointments.
+A Jira Cloud Forge application that provides an advanced calendar view for managing scheduled work items, events, and appointments across Jira Service Management and regular Jira projects.
 
 ## 🚀 Features
 
@@ -11,22 +11,13 @@ A Jira Cloud Forge application that provides a comprehensive calendar view for m
 
 ### Visit Management
 - **Multi-day Visits**: Continuous bars spanning multiple days
-- **Visit Types**: Color-coded icons for different visit categories:
-  - 🔵 **IA** - Internal atNorth (Blue)
-  - 🟢 **EA** - External atNorth (Green) 
-  - 🟠 **IC** - Internal Customer (Orange)
-  - 🔴 **EC** - External Customer (Red)
+- **Visit Types**: Dynamically generated color-coded icons based on your Jira configuration
 - **Status Tracking**: Visual status indicators for visit progress
 - **Smart Layout**: Automatic row assignment prevents overlapping events
 
 ### Data Integration
 - **Jira Integration**: Seamlessly connects with Jira project data
-- **Custom Fields**: Supports custom visit fields including:
-  - Visit type (customfield_10996)
-  - Site location (customfield_10066)
-  - Customer name (customfield_10255)
-  - Contact information (customfield_10256)
-  - Visit times (customfield_10119, customfield_10799)
+- **Custom Fields**: Configurable custom field mappings through the Administration page
 
 ## 📋 Prerequisites
 
@@ -39,8 +30,8 @@ A Jira Cloud Forge application that provides a comprehensive calendar view for m
 
 ### 1. Clone the Repository
 ```bash
-git clone https://bitbucket.org/xalt/atnorth-visits-calendar.git
-cd atnorth-visits-calendar
+git clone <your-repository-url>
+cd visits-calendar
 ```
 
 ### 2. Install Dependencies
@@ -74,7 +65,7 @@ cd ..
 ## 🏗️ Project Structure
 
 ```
-atnorth-visits-calendar/
+visits-calendar/
 ├── src/
 │   ├── index.js              # Main Forge resolver
 │   ├── components/
@@ -103,16 +94,10 @@ atnorth-visits-calendar/
 ## ⚙️ Configuration
 
 ### Jira Project Settings
-The app is configured to work with:
-- **Project**: SUPPORT
-- **Issue Type**: Visit
-- **Custom Fields**:
-  - `customfield_10996` - Type of visit
-  - `customfield_10066` - Site location
-  - `customfield_10255` - Customer name
-  - `customfield_10256` - Contact name
-  - `customfield_10119` - Visit start time
-  - `customfield_10799` - Visit end time
+The app can be configured to work with any Jira project and custom fields through the Administration page. Default example values:
+- **Project**: Your project key (e.g., SUPPORT)
+- **Issue Type**: Your request type (e.g., Visit)
+- **Custom Fields**: Configure via Administration page to match your Jira instance
 
 ### Environment Variables
 No additional environment variables required. The app uses Forge's built-in authentication and API access.
@@ -125,21 +110,16 @@ No additional environment variables required. The app uses Forge's built-in auth
 - **Row Management**: Automatic row assignment prevents overlaps
 - **Dynamic Height**: Calendar weeks expand based on content
 - **Visit Icons**: Color-coded type indicators on each visit
-- **Status Colors**: Visual status representation (Waiting for approval, Approved, Rejected, In progress, Done, Reopened)
+- **Status Colors**: Visual status representation
 
 ### Weekly View  
 - **Time Slots**: Hourly breakdown from 8AM to 6PM
 - **Business Days**: Monday through Friday focus
 - **Multi-day Support**: Events spanning multiple days in the week
-- **Detailed Information**: Customer, site, and time details
+- **Detailed Information**: Customer, location, and time details
 
 ### Visit Types
-| Type | Icon | Color | Description |
-|------|------|-------|-------------|
-| Internal atNorth | IA | Blue | Internal team visits |
-| External atNorth | EA | Green | External atNorth visits |
-| Internal Customer | IC | Orange | Customer internal visits |
-| External Customer | EC | Red | Customer external visits |
+Visit types are dynamically configured based on your Jira custom field values. Icons are automatically generated from the type name initials, and colors are consistently assigned.
 
 ## 🚀 Deployment
 
@@ -199,7 +179,7 @@ npm run lint
 
 ## 📊 Data Flow
 
-1. **Jira Integration**: App fetches visit data from SUPPORT project
+1. **Jira Integration**: App fetches visit data from your configured project
 2. **Data Processing**: Events are processed and categorized
 3. **Calendar Rendering**: Events are displayed in appropriate calendar views
 4. **User Interaction**: Click events open detailed visit information
@@ -210,8 +190,8 @@ npm run lint
 
 **Events not displaying:**
 - Verify Jira project permissions
-- Check custom field IDs in configuration
-- Ensure issue type "Visit" exists
+- Check custom field IDs in Administration page
+- Ensure your request type exists in the configured project
 
 **Calendar layout issues:**
 - Clear browser cache
@@ -241,17 +221,13 @@ Enable console logging by checking browser developer tools. The app provides det
 
 ## 📄 License
 
-This project is proprietary software developed for atNorth by XALT.
-
-## 🏢 About atNorth
-
-atNorth is a leading provider of data center and cloud services. This calendar application helps manage client visits and site appointments across our facilities.
+This project is developed by XALT.
 
 ## 🛠️ Technical Stack
 
 - **Backend**: Atlassian Forge (Node.js)
 - **Frontend**: React 18
-- **Styling**: CSS3 with Flexbox and Grid
+- **Styling**: CSS3 with Flexbox and Grid, Tailwind CSS
 - **Build Tool**: Create React App
 - **API**: Jira REST API v3
 - **Deployment**: Atlassian Forge CLI
@@ -265,6 +241,5 @@ For technical support or questions:
 
 ---
 
-**Version**: 6.53.0  
-**Last Updated**: December 2024  
-**Developed by**: XALT for atNorth
+**Version**: 1.0.0  
+**Developed by**: XALT
