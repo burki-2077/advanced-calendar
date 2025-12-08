@@ -8,7 +8,7 @@
     "install:all": "npm install && cd static && npm install"
   },
   "keywords": [],
-  "author": "Atlassian Consultant",
+  "author": "Burak Erol",
   "license": "MIT",
   "description": "Advanced calendar view for Jira work items, events, and schedules",
   "dependencies": {
