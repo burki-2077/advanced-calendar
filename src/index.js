@@ -7,7 +7,7 @@
  */
 
 import Resolver from '@forge/resolver';
-import api, { route, storage } from '@forge/api';
+import api, { route, storage, authorize } from '@forge/api';
 import { logger } from './utils/logger.js';
 import { API_CONFIG, DEFAULT_SETTINGS, ERROR_CODES } from './utils/constants.js';
 import { formatDateTime, formatDateYMD, getDefaultDateRange } from './utils/dateUtils.js';
@@ -42,6 +42,12 @@ async function getSettings() {
  */
 async function fetchWorkflowStatuses(projectKey, requestTypeName = null) {
   try {
+    const canBrowse = await authorize().onJiraProject(projectKey).canCreateIssues();
+    if (!canBrowse) {
+      logger.warn('User not authorized to access project:', projectKey);
+      return [];
+    }
+    
     const result = await api.asApp().requestJira(route`/rest/api/3/project/${projectKey}/statuses`);
     const data = await result.json();
 
@@ -545,7 +551,7 @@ resolver.define('fetchWorkflowStatuses', async (req) => {
  */
 resolver.define('fetchCustomFields', async () => {
   try {
-    const result = await api.asApp().requestJira(route`/rest/api/3/field`);
+    const result = await api.asUser().requestJira(route`/rest/api/3/field`);
     
     if (!result.ok) {
       const errorText = await result.text();
@@ -592,7 +598,7 @@ resolver.define('searchProjects', async (req) => {
       safetyCount++;
       
       const result = await withRetry(async () => {
-        return await api.asApp().requestJira(
+        return await api.asUser().requestJira(
           route`/rest/api/3/project/search?startAt=${startAt}&maxResults=${maxResults}&orderBy=name`,
           { headers: { 'Accept': 'application/json' } }
         );
@@ -660,6 +666,11 @@ resolver.define('fetchRequestTypes', async (req) => {
       return { success: false, error: 'Project key is required' };
     }
     
+    const canAccess = await authorize().onJiraProject(projectKey).canCreateIssues();
+    if (!canAccess) {
+      return { success: false, error: 'User not authorized to access this project' };
+    }
+    
     const projectResult = await api.asApp().requestJira(route`/rest/api/3/project/${projectKey}`);
     
     if (!projectResult.ok) {
@@ -709,6 +720,11 @@ resolver.define('fetchIssueTypes', async (req) => {
       return { success: false, error: 'Project key is required' };
     }
     
+    const canAccess = await authorize().onJiraProject(projectKey).canCreateIssues();
+    if (!canAccess) {
+      return { success: false, error: 'User not authorized to access this project' };
+    }
+    
     const projectResult = await api.asApp().requestJira(route`/rest/api/3/project/${projectKey}`);
     
     if (!projectResult.ok) {
@@ -741,6 +757,11 @@ resolver.define('detectProjectType', async (req) => {
     
     if (!projectKey) {
       return { success: false, error: 'Project key is required' };
+    }
+    
+    const canAccess = await authorize().onJiraProject(projectKey).canCreateIssues();
+    if (!canAccess) {
+      return { success: false, error: 'User not authorized to access this project' };
     }
     
     const projectResult = await api.asApp().requestJira(route`/rest/api/3/project/${projectKey}`);
