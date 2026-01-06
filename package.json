@@ -12,8 +12,8 @@
   "license": "MIT",
   "description": "Advanced calendar view for Jira work items, events, and schedules",
   "dependencies": {
-    "@forge/api": "^4.1.1",
-    "@forge/resolver": "^1.5.12"
+    "@forge/api": "^6.4.3",
+    "@forge/resolver": "^1.7.1"
   },
   "devDependencies": {
     "@forge/cli": "^11.6.0",
