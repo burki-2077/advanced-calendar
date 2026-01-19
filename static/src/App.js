@@ -3,7 +3,7 @@ import { invoke } from '@forge/bridge';
 import MonthlyCalendarView from './components/MonthlyCalendarView';
 import WeeklyCalendarView from './components/WeeklyCalendarView';
 import VisitDetailsModal from './components/VisitDetailsModal';
-import xaltLogo from './assets/xalt_logo_black_main.svg';
+import xaltLogo from './assets/acfj-logo.png';
 
 // Helper function to get status display color based on category
 const getStatusCategoryColor = (category) => {
@@ -445,7 +445,7 @@ function App() {
                                 <img src={xaltLogo} alt="XALT logo" className="brand-logo" />
                             </div>
                             <div className="brand-text">
-                                <h1 className="app-title">📅 Advanced Calendar for Jira</h1>
+                                <h1 className="app-title">Advanced Calendar for Jira</h1>
                                 <p className="app-subtitle">Advanced calendar views for Jira work items</p>
                             </div>
                         </div>

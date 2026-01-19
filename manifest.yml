@@ -5,7 +5,7 @@ modules:
       resolver:
         function: resolver
       title: Advanced Calendar for Jira
-      icon: https://www.xalt.de/wp-content/uploads/2020/08/xalt_logo_black_main.svg
+      icon: resource:main;app-icon.png
       viewportSize: medium
       authorizationMode: requiresUser
   jira:adminPage:
